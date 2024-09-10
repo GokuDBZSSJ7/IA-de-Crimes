@@ -1,22 +1,19 @@
-import pickle
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
 
-def treinar_modelo(X_train, y_train):
-    modelo = RandomForestClassifier()
-    modelo.fit(X_train, y_train)
-    return modelo
-
-def avaliar_modelo(modelo, X_test, y_test):
-    y_pred = modelo.predict(X_test)
-    acuracia = accuracy_score(y_test, y_pred)
-    return acuracia
-
-def salvar_modelo(modelo, caminho_arquivo):
-    with open(caminho_arquivo, 'wb') as f:
-        pickle.dump(modelo, f)
-
-def carregar_modelo(caminho_arquivo):
-    with open(caminho_arquivo, 'rb') as f:
-        modelo = pickle.load(f)
-    return modelo
+def train_model(data):
+    # Selecionar colunas relevantes como características
+    X = data[['ano', 'mes', 'id_municipio', 'latrocinio']].dropna()
+    
+    # Variável alvo
+    y = data['homicidio_doloso'].dropna()
+    
+    # Garantir que X e y tenham índices consistentes
+    X = X.loc[y.index]
+    
+    # Dividir dados em conjuntos de treinamento e teste
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    model = RandomForestClassifier()
+    model.fit(X_train, y_train)
+    return model

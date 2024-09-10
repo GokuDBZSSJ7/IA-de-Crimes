@@ -1,19 +1,35 @@
-from preprocessamente import carregar_dados, preprocessar_dados
-from modelo import treinar_modelo, avaliar_modelo, salvar_modelo, carregar_modelo
+from preprocessamente import load_and_preprocess_data
+from modelo import train_model
+from visualize import create_heatmap
+import webbrowser
+import os
 
-def main():
-    df = carregar_dados('../dados/dados.csv')
-    X_train, X_test, y_train, y_test = preprocessar_dados(df)
-
-    modelo = treinar_modelo(X_train, y_train)
-
-    acuracia = avaliar_modelo(modelo, X_test, y_test)
-    print(f'Acurácia do modelo: {acuracia}')
-
-    salvar_modelo(modelo, '../models/modelo.pkl')
-
-    modelo_carregado = carregar_modelo('../models/modelo.pkl')
+if __name__ == "__main__":
+    # Carregar e pré-processar os dados
+    data = load_and_preprocess_data('../dados/crimes.csv')
     
-
-if __name__ == '__main__':
-    main()
+    # Treinar o modelo
+    model = train_model(data)
+    
+    # Usar as mesmas colunas para as previsões
+    features = data[['ano', 'mes', 'id_municipio', 'latrocinio']].dropna()
+    
+    # Garantir que os índices estejam consistentes
+    features = features.loc[data['homicidio_doloso'].dropna().index]
+    
+    # Fazer previsões
+    predictions = model.predict(features)
+    
+    # Criar um DataFrame temporário com as previsões
+    data_with_predictions = features.copy()
+    data_with_predictions['prediction'] = predictions
+    
+    # Criar o heatmap
+    heatmap = create_heatmap(data_with_predictions, 'prediction')
+    
+    # Salvar o heatmap como um arquivo HTML
+    html_file = 'heatmap.html'
+    heatmap.save(html_file)
+    
+    # Abrir o HTML no navegador
+    webbrowser.open('file://' + os.path.realpath(html_file))
